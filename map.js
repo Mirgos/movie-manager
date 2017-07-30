@@ -7,8 +7,10 @@ stdin.resume();
 stdin.setEncoding( 'utf8' );
 let level;
 const bush = { sprite: '`', walkable: true, inventory: [] };
-const fillar = { sprite: 'X', walkable: false };
-const coin = { sprite: 'o', walkable: true, inventory: [ 'coin' ] };
+const fillar = { sprite: 'X', walkable: false, inventory: [] };
+
+const coin = { name: 'coin', sprite: 'o' };
+
 const player = { name: 'Przemgej', sprite: 'P', walkable: false, inventory: [] };
 const playerPosition = { x: 6, y: 8 };
 let putCoin = false;
@@ -22,13 +24,13 @@ function pickItem(tx, ty) {
 		player.inventory = player.inventory.concat(loot);
 		console.log(player.inventory);
 		console.log(loot);
-		level[tx][ty] = bush;
+		level[tx][ty] = _.cloneDeep(bush);
 	}
 }
 
 function putItem(cx, cy, item) {
 
-	level[cx][cy] = item;
+	level[cx][cy].inventory.push(item);
 }
 	function createColumn() {
 
@@ -98,7 +100,11 @@ stdin.on( 'data', function( key ){
 		console.log('Y: ' + playerPosition.y);		
 		for(let y = 0; y<12; y++) {
 			for (let x = 0; x<12; x++) {
+				if(plane[x][y].inventory.length>0 && plane[x][y] !== player ) {
+					process.stdout.write(plane[x][y].inventory[0].sprite + ' ');
+				} else {
 				process.stdout.write(plane[x][y].sprite + ' ');
+				}
 			}
 				process.stdout.write('\n');
 		}
@@ -108,7 +114,10 @@ stdin.on( 'data', function( key ){
 	level[playerPosition.x][playerPosition.y] = player;
 
 	render(level);
-	console.log('Ekwipunek: ' + player.inventory);
+	console.log('Ekwipunek: ' + player.inventory.map(function(item){
+
+		return item.name;
+	}).join(', '));
 });
 
 
