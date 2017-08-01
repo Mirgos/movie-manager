@@ -58,6 +58,27 @@ function mapInit() {
 	}
 }
 
+function move(keyPressed, bind, xDirection, yDirection) {
+
+	if (keyPressed === bind) {
+		let distance;
+		if( blink === true ) {
+			distance = 3;
+			blink = false;
+		} else {
+			distance = 1;
+		}
+		for(let i = 0; i<distance; i++) {
+			if( level[playerPosition.x+xDirection][playerPosition.y+yDirection].walkable === true) {
+				playerPosition.x += xDirection;
+				playerPosition.y += yDirection;
+			}
+		}
+	}
+}
+
+
+
 stdin.on( 'data', function( key ){
 
 	if(!level) {
@@ -70,45 +91,10 @@ stdin.on( 'data', function( key ){
 
   	level[playerPosition.x][playerPosition.y] = bush;
 
-  	if (key === 'w') {
-  		if( blink === true ) {
-  			for(let i = 0; i<3; i++) {
-  				if( level[playerPosition.x][playerPosition.y-1].walkable === true) playerPosition.y--;
-  			}
-  			blink = false;
-  		} 
-  		else if( level[playerPosition.x][playerPosition.y-1].walkable === true) playerPosition.y--;
-  	}
-
-  	if (key === 's') {
-  		if( blink === true ) {
-  			for(let i = 0; i<3; i++) {
-  				if( level[playerPosition.x][playerPosition.y+1].walkable === true) playerPosition.y++;
-  			}
-  			blink = false;
-  		} 
-  		else if( level[playerPosition.x][playerPosition.y+1].walkable === true) playerPosition.y++;
-  	}
-
-  	if (key === 'a') {
-  		if( blink === true ) {
-  			for(let i = 0; i<3; i++) {
-  				if( level[playerPosition.x-1][playerPosition.y].walkable === true) playerPosition.x--;
-  			}
-  			blink = false;
-  		} 
-  		else if( level[playerPosition.x-1][playerPosition.y].walkable === true) playerPosition.x--;
-  	}
-
-  	if (key === 'd') {
-  		if( blink === true ) {
-  			for(let i = 0; i<3; i++) {
-  				if( level[playerPosition.x+1][playerPosition.y].walkable === true) playerPosition.x++;
-  			}
-  			blink = false;
-  		} 
-  		else if( level[playerPosition.x+1][playerPosition.y].walkable === true) playerPosition.x++;
-  	}
+  	move(key, 'w', 0, -1);
+  	move(key, 's', 0, 1);
+  	move(key, 'a', -1, 0);
+  	move(key, 'd', 1, 0);
 
   	if (key === 'r') {
   		if(turn === 0) blink = true;
