@@ -13,16 +13,16 @@ const coin = { name: 'coin', sprite: 'o' };
 
 const player = { name: 'Przemgej', sprite: 'P', walkable: false, inventory: [] };
 const playerPosition = { x: 6, y: 8 };
+let blink = false;
 let putCoin = false;
+let turn = 0;
 
 function pickItem(tx, ty) {
 
 	if(playerPosition.x === tx && playerPosition.y === ty) {
 		const tileInventory = level[tx][ty].inventory;
 		const loot = tileInventory.splice(0, tileInventory.length);
-		console.log(player.inventory);
 		player.inventory = player.inventory.concat(loot);
-		console.log(player.inventory);
 		console.log(loot);
 		level[tx][ty] = _.cloneDeep(bush);
 	}
@@ -71,24 +71,52 @@ stdin.on( 'data', function( key ){
   	level[playerPosition.x][playerPosition.y] = bush;
 
   	if (key === 'w') {
-  		if( level[playerPosition.x][playerPosition.y-1].walkable === true) playerPosition.y--;
+  		if( blink === true ) {
+  			for(let i = 0; i<3; i++) {
+  				if( level[playerPosition.x][playerPosition.y-1].walkable === true) playerPosition.y--;
+  			}
+  			blink = false;
+  		} 
+  		else if( level[playerPosition.x][playerPosition.y-1].walkable === true) playerPosition.y--;
   	}
 
   	if (key === 's') {
-  		if( level[playerPosition.x][playerPosition.y+1].walkable === true) playerPosition.y++;
+  		if( blink === true ) {
+  			for(let i = 0; i<3; i++) {
+  				if( level[playerPosition.x][playerPosition.y+1].walkable === true) playerPosition.y++;
+  			}
+  			blink = false;
+  		} 
+  		else if( level[playerPosition.x][playerPosition.y+1].walkable === true) playerPosition.y++;
   	}
 
   	if (key === 'a') {
-  		if( level[playerPosition.x-1][playerPosition.y].walkable === true) playerPosition.x--;
+  		if( blink === true ) {
+  			for(let i = 0; i<3; i++) {
+  				if( level[playerPosition.x-1][playerPosition.y].walkable === true) playerPosition.x--;
+  			}
+  			blink = false;
+  		} 
+  		else if( level[playerPosition.x-1][playerPosition.y].walkable === true) playerPosition.x--;
   	}
 
   	if (key === 'd') {
-  		if( level[playerPosition.x+1][playerPosition.y].walkable === true) playerPosition.x++;
+  		if( blink === true ) {
+  			for(let i = 0; i<3; i++) {
+  				if( level[playerPosition.x+1][playerPosition.y].walkable === true) playerPosition.x++;
+  			}
+  			blink = false;
+  		} 
+  		else if( level[playerPosition.x+1][playerPosition.y].walkable === true) playerPosition.x++;
+  	}
+
+  	if (key === 'r') {
+  		if(turn === 0) blink = true;
+  		turn = 5;
   	}
 
 	function clearScreen() {
-
-		for(let i=1; i<50; i++) {
+		for(let i = 0; i<50; i++) {
 			console.log();
 		}
 	}
@@ -97,7 +125,8 @@ stdin.on( 'data', function( key ){
 
 		clearScreen();
 		console.log('X: ' + playerPosition.x);
-		console.log('Y: ' + playerPosition.y);		
+		console.log('Y: ' + playerPosition.y);	
+		console.log('Blink cd: ' + turn)	
 		for(let y = 0; y<12; y++) {
 			for (let x = 0; x<12; x++) {
 				if(plane[x][y].inventory.length>0 && plane[x][y] !== player ) {
@@ -118,6 +147,8 @@ stdin.on( 'data', function( key ){
 
 		return item.name;
 	}).join(', '));
+	if (turn === 1) turn = 0;
+	else if (turn<6 && turn>0) turn--;
 });
 
 
