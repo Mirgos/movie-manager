@@ -4,11 +4,17 @@
   "description": "",
   "main": "map.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "eslint": "^4.3.0",
+    "eslint-config-hapi": "^10.0.0",
+    "eslint-plugin-hapi": "^4.0.0"
   }
 }

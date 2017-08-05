@@ -1,0 +1,7 @@
+{
+	"extends": "eslint-config-hapi",
+	"rules": {
+		"indent": ["error", 2],
+		"prefer-arrow-callback": off,
+	}
+}
