@@ -15,7 +15,8 @@ const player = { name: 'Przemgej', sprite: 'P', walkable: false, hp: 10 ,invento
 const playerPosition = { x: 6, y: 8 };
 let isBlinking = false;
 let blinkCD = 0;
-let dragonBreath = false;
+let isDragonBreathing = false;
+let dragonBreathCD = 0;
 let action = true;
 
 
@@ -92,11 +93,21 @@ const move = (keyPressed, bind, xDirection, yDirection, target) => {
         action = true;
       }, 100);
     }
-    else if (dragonBreath === true) {
+    else if (isDragonBreathing === true) {
       if ( level[target.x + xDirection][target.y + yDirection] === enemy ) {
         level[target.x + xDirection][target.y + yDirection].hp -= 2;
       }
-      dragonBreath = false;
+      isDragonBreathing = false;
+      dragonBreathCD = 1000;
+      const dragonBreathUpdate = setInterval(function (){
+
+        dragonBreathCD -= 100;
+        if (dragonBreathCD <= 0) {
+          dragonBreathCD = 0;
+          clearInterval(dragonBreathUpdate);
+        }
+        action = true;
+      }, 100);
     }
     else {
       distance = 1;
@@ -119,8 +130,8 @@ const render = (plane) => {
     clearScreen();
     console.log('X: ' + playerPosition.x);
     console.log('Y: ' + playerPosition.y);
-    console.log('Blink cd: ' + blinkCD / 1000 );
-    console.log('Dragon Breath cd: ' + turnDB);
+    console.log('Blink cd: ' + blinkCD / 1000);
+    console.log('Dragon Breath cd: ' + dragonBreathCD / 1000);
     console.log('Hp Andrzgeja: ' + enemy.hp);
     console.log('Ekwipunek: ' + player.inventory.map(function (item){
 
@@ -171,11 +182,8 @@ stdin.on('data', function (key) {
     isBlinking = true;
   }
 
-  if (key === 'q') {
-    if (turnDB === 0) {
-      dragonBreath = true;
-    }
-    turnDB = 5;
+  if (key === 'q' && dragonBreathCD === 0 ) {
+    isDragonBreathing = true;
   }
 
   pickItem(playerPosition.x,playerPosition.y);
