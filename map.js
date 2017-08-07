@@ -13,8 +13,8 @@ const coin = { name: 'coin', sprite: 'o' };
 
 const player = { name: 'Przemgej', sprite: 'P', walkable: false, hp: 10 ,inventory: [] };
 const playerPosition = { x: 6, y: 8 };
-let isBlinking = true;
-let isBlinkOnCD = false;
+let isBlinking = false;
+let blinkCD = 0;
 let dragonBreath = false;
 let action = true;
 
@@ -67,84 +67,92 @@ const mapInit = () => {
   }
 };
 
-  const clearScreen = () => {
+const clearScreen = () => {
 
-    for (let i = 0; i < 50; ++i) {
-      console.log();
-    }
-  };
+  for (let i = 0; i < 50; ++i) {
+    console.log();
+  }
+};
 
-  const move = (keyPressed, bind, xDirection, yDirection, target) => {
+const move = (keyPressed, bind, xDirection, yDirection, target) => {
 
-    if (keyPressed === bind) {
-      let distance;
-      if (isBlinking === true) {
-        distance = 3;
-        isBlinking = false;
-        isBlinkOnCD = true;
-        setTimeout(function(){ 
-          action = true;
-          isBlinkOnCD = false;
-        }, 5000)
-      }
-      else if (dragonBreath === true) {
-        if ( level[target.x + xDirection][target.y + yDirection] === enemy ) {
-          level[target.x + xDirection][target.y + yDirection].hp -= 2;
+  if (keyPressed === bind) {
+    let distance;
+    if (isBlinking === true) {
+      distance = 3;
+      isBlinking = false;
+      blinkCD = 5000;
+      const blinkUpdate = setInterval(function (){
+
+        blinkCD -= 100;
+        if (blinkCD <= 0) {
+          blinkCD = 0;
+          clearInterval(blinkUpdate);
         }
-        dragonBreath = false;
+        action = true;
+      }, 100);
+    }
+    else if (dragonBreath === true) {
+      if ( level[target.x + xDirection][target.y + yDirection] === enemy ) {
+        level[target.x + xDirection][target.y + yDirection].hp -= 2;
       }
-      else {
-        distance = 1;
-      }
-      for (let i = 0; i < distance; ++i) {
-        if (level[target.x + xDirection][target.y + yDirection].walkable !== false ) {
-          level[target.x][target.y] = bush;
-          target.x += xDirection;
-          target.y += yDirection;
-        }
+      dragonBreath = false;
+    }
+    else {
+      distance = 1;
+    }
+    for (let i = 0; i < distance; ++i) {
+      if (level[target.x + xDirection][target.y + yDirection].walkable !== false ) {
+        level[target.x][target.y] = bush;
+        target.x += xDirection;
+        target.y += yDirection;
       }
     }
-  };
+  }
+};
 
-  mapInit();
+mapInit();
 
-  const render = (plane) => {
+const render = (plane) => {
 
-    if(action === true) {
-      clearScreen();
-      console.log('X: ' + playerPosition.x);
-      console.log('Y: ' + playerPosition.y);
-      console.log('Blink cd: ' + isBlinkOnCD);
-      console.log('Dragon Breath cd: ' + turnDB);
-      console.log('Hp Andrzgeja: ' + enemy.hp);
-      console.log('Ekwipunek: ' + player.inventory.map(function (item){
+  if (action === true) {
+    clearScreen();
+    console.log('X: ' + playerPosition.x);
+    console.log('Y: ' + playerPosition.y);
+    console.log('Blink cd: ' + blinkCD / 1000 );
+    console.log('Dragon Breath cd: ' + turnDB);
+    console.log('Hp Andrzgeja: ' + enemy.hp);
+    console.log('Ekwipunek: ' + player.inventory.map(function (item){
 
-        return item.name;
-      }).join(', '));
-      for ( let y = 0; y < 12; ++y ) {
-        for ( let x = 0; x < 12; ++x ) {
-          if ( plane[x][y].inventory.length > 0 && plane[x][y] !== player ) {
-            process.stdout.write(plane[x][y].inventory[0].sprite + ' ');
-          }
-          else {
-            process.stdout.write(plane[x][y].sprite + ' ');
-          }
+      return item.name;
+    }).join(', '));
+    for ( let y = 0; y < 12; ++y ) {
+      for ( let x = 0; x < 12; ++x ) {
+        if ( plane[x][y].inventory.length > 0 && plane[x][y] !== player ) {
+          process.stdout.write(plane[x][y].inventory[0].sprite + ' ');
         }
-        process.stdout.write('\n');
+        else {
+          process.stdout.write(plane[x][y].sprite + ' ');
+        }
       }
-      action = false;
+      process.stdout.write('\n');
     }
-  };
+    action = false;
+  }
+};
 
-const fps = 1000/60;
-setInterval(function(){ render(level); }, fps);
+const fps = 1000 / 60;
+setInterval(function () {
+
+  render(level);
+}, fps);
 
 stdin.on('data', function (key) {
 
   if (!level) {
     mapInit();
   }
-  
+
   if (key === '\u0003') {
     process.exit();
   }
@@ -159,7 +167,7 @@ stdin.on('data', function (key) {
   move(key, '4', -1, 0, enemyPosition);
   move(key, '6', 1, 0, enemyPosition);
 
-  if (key === 'r' && isBlinkOnCD === false) {
+  if (key === 'r' && blinkCD === 0) {
     isBlinking = true;
   }
 
