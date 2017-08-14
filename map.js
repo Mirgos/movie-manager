@@ -32,28 +32,25 @@ const putItem = (cx, cy, item) => {
   level[cx][cy].inventory.push(item);
 };
 
-const pickItem = (tx, ty) => {
+const pickItem = (target, targetPosition) => {
 
-  if (playerPosition.x === tx && playerPosition.y === ty) {
-    const tileInventory = level[tx][ty].inventory;
-    const loot = tileInventory.splice(0, tileInventory.length);
-    console.log(loot);
-    if(loot.length > 0 && loot[0].name === "coin" ) {
-      let coinPlaceX = Math.floor((Math.random() * 10) + 1);
-      let coinPlaceY = Math.floor((Math.random() * 10) + 1);
-      if (coinPlaceX !== playerPosition.x && coinPlaceY !== playerPosition.y) {
-      console.log(coinPlaceX);
-      console.log(coinPlaceY);
-      console.log(playerPosition.x);
-      console.log(playerPosition.y);
-      putItem(coinPlaceX,coinPlaceY,_.cloneDeep(coin));
-      console.log(tileInventory);
-      console.log(level[coinPlaceX][coinPlaceY].inventory);
-      }
+  const tileInventory = level[targetPosition.x][targetPosition.y].inventory;
+  console.log({tileInventory})
+  const loot = tileInventory.splice(0, tileInventory.length);
+  console.log({loot})
+  if(loot.length > 0 && loot[0].name === "coin" ) {
+    // TODO: check for columns
+    let coinPlaceX = targetPosition.x;
+    while (coinPlaceX === playerPosition.x || coinPlaceX === enemyPosition.x) {
+      coinPlaceX = Math.floor((Math.random() * 10) + 1);
     }
-    player.inventory = player.inventory.concat(loot);
-    level[tx][ty] = _.cloneDeep(bush);
+    let coinPlaceY = targetPosition.y;
+    while (coinPlaceY === playerPosition.y || coinPlaceY === enemyPosition.y) {
+      coinPlaceY = Math.floor((Math.random() * 10) + 1);
+    }
+    putItem(coinPlaceX,coinPlaceY,_.cloneDeep(coin));
   }
+  target.inventory = target.inventory.concat(loot);
 };
 
 const createColumn = () => {
@@ -68,6 +65,7 @@ const mapInit = () => {
 
   level = new Array(12).fill();
   level = level.map(createColumn);
+  level[playerPosition.x][playerPosition.y] = player;
   level[enemyPosition.x][enemyPosition.y] = enemy;
   putItem(Math.floor((Math.random() * 10) + 1),Math.floor((Math.random() * 10) + 1),_.cloneDeep(coin));
   putItem(Math.floor((Math.random() * 10) + 1),Math.floor((Math.random() * 10) + 1),_.cloneDeep(coin));
@@ -87,7 +85,7 @@ const clearScreen = () => {
   }
 };
 
-const move = (keyPressed, bind, xDirection, yDirection, target) => {
+const move = (keyPressed, bind, xDirection, yDirection, target, targetPosition) => {
 
   if (keyPressed === bind) {
     let distance;
@@ -106,8 +104,8 @@ const move = (keyPressed, bind, xDirection, yDirection, target) => {
       }, 100);
     }
     else if (isDragonBreathing === true) {
-      if ( level[target.x + xDirection][target.y + yDirection] === enemy ) {
-        level[target.x + xDirection][target.y + yDirection].hp -= 2;
+      if ( level[targetPosition.x + xDirection][targetPosition.y + yDirection] === enemy ) {
+        level[targetPosition.x + xDirection][targetPosition.y + yDirection].hp -= 2;
       }
       isDragonBreathing = false;
       dragonBreathCD = 1000;
@@ -125,16 +123,16 @@ const move = (keyPressed, bind, xDirection, yDirection, target) => {
       distance = 1;
     }
     for (let i = 0; i < distance; ++i) {
-      if (level[target.x + xDirection][target.y + yDirection].walkable !== false ) {
-        level[target.x][target.y] = bush;
-        target.x += xDirection;
-        target.y += yDirection;
+      if (level[targetPosition.x + xDirection][targetPosition.y + yDirection].walkable !== false ) {
+        level[targetPosition.x][targetPosition.y] = _.cloneDeep(bush);
+        targetPosition.x += xDirection;
+        targetPosition.y += yDirection;
+        pickItem(target, targetPosition);
+        level[targetPosition.x][targetPosition.y] = target;
       }
     }
   }
 };
-
-mapInit();
 
 const render = (plane) => {
 
@@ -145,15 +143,19 @@ const render = (plane) => {
     console.log('Blink cd: ' + blinkCD / 1000);
     console.log('Dragon Breath cd: ' + dragonBreathCD / 1000);
     console.log('Hp Andrzgeja: ' + enemy.hp);
+    console.log('Ekwipunek Andrzgeja: ' + enemy.inventory.map(function (item) {
+
+      return item.name;
+    }).join(', '));
     console.log(player.inventory.length);
     console.log(numberOfCoins);
     console.log('Ekwipunek: ' + player.inventory.map(function (item){
 
       return item.name;
     }).join(', '));
-    for ( let y = 0; y < 12; ++y ) {
-      for ( let x = 0; x < 12; ++x ) {
-        if ( plane[x][y].inventory.length > 0 && plane[x][y] !== player ) {
+    for (let y = 0; y < 12; ++y) {
+      for (let x = 0; x < 12; ++x) {
+        if (plane[x][y].inventory.length > 0 && plane[x][y] !== player && plane[x][y] !== enemy) {
           process.stdout.write(plane[x][y].inventory[0].sprite + ' ');
         }
         else {
@@ -169,10 +171,13 @@ const render = (plane) => {
 const fps = 1000 / 60;
 setInterval(function () {
 
+  if (!level) {
+    main();
+  }
   render(level);
 }, fps);
 
-stdin.on('data', function (key) {
+const main = (key) => {
 
   if (!level) {
     mapInit();
@@ -182,15 +187,15 @@ stdin.on('data', function (key) {
     process.exit();
   }
 
-  move(key, 'w', 0, -1, playerPosition);
-  move(key, 's', 0, 1, playerPosition);
-  move(key, 'a', -1, 0, playerPosition);
-  move(key, 'd', 1, 0, playerPosition);
+  move(key, 'w', 0, -1, player, playerPosition);
+  move(key, 's', 0, 1, player, playerPosition);
+  move(key, 'a', -1, 0, player, playerPosition);
+  move(key, 'd', 1, 0, player, playerPosition);
 
-  move(key, '8', 0, -1, enemyPosition);
-  move(key, '5', 0, 1, enemyPosition);
-  move(key, '4', -1, 0, enemyPosition);
-  move(key, '6', 1, 0, enemyPosition);
+  move(key, '8', 0, -1, enemy, enemyPosition);
+  move(key, '5', 0, 1, enemy, enemyPosition);
+  move(key, '4', -1, 0, enemy, enemyPosition);
+  move(key, '6', 1, 0, enemy, enemyPosition);
 
   if (key === 'r' && blinkCD === 0) {
     isBlinking = true;
@@ -199,13 +204,9 @@ stdin.on('data', function (key) {
   if (key === 'q' && dragonBreathCD === 0 ) {
     isDragonBreathing = true;
   }
-
-  pickItem(playerPosition.x,playerPosition.y);
-  level[playerPosition.x][playerPosition.y] = player;
-  level[enemyPosition.x][enemyPosition.y] = enemy;
-
   if ( enemy.hp < 0 ) {
-    level[enemyPosition.x][enemyPosition.y] = bush;
+    console.log('DIE')
+    level[enemyPosition.x][enemyPosition.y] = _.cloneDeep(bush);
   }
   if (turnDB === 1) {
     turnDB = 0;
@@ -214,4 +215,6 @@ stdin.on('data', function (key) {
     turnDB--;
   }
   action = true;
-});
+}
+
+stdin.on('data', main);
