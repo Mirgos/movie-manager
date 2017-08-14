@@ -168,15 +168,6 @@ const render = (plane) => {
   }
 };
 
-const fps = 1000 / 60;
-setInterval(function () {
-
-  if (!level) {
-    main();
-  }
-  render(level);
-}, fps);
-
 const main = (key) => {
 
   if (!level) {
@@ -216,5 +207,14 @@ const main = (key) => {
   }
   action = true;
 }
+
+const fps = 1000 / 60;
+setInterval(function () {
+
+  if (!level) {
+    main();
+  }
+  render(level);
+}, fps);
 
 stdin.on('data', main);
