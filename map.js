@@ -13,6 +13,7 @@ const coin = { name: 'coin', sprite: 'o' };
 
 const player = { name: 'Przemgej', sprite: 'P', walkable: false, hp: 10 ,inventory: [] };
 const playerPosition = { x: 6, y: 8 };
+let numberOfCoins = 0;
 let isBlinking = false;
 let blinkCD = 0;
 let isDragonBreathing = false;
@@ -26,19 +27,33 @@ let turnDB = 0;
 const enemy = { name: 'Andgrzej', sprite: 'A', walkable: false, hp: 5, inventory: [] };
 const enemyPosition = { x: 9, y: 4 };
 
+const putItem = (cx, cy, item) => {
+
+  level[cx][cy].inventory.push(item);
+};
+
 const pickItem = (tx, ty) => {
 
   if (playerPosition.x === tx && playerPosition.y === ty) {
     const tileInventory = level[tx][ty].inventory;
     const loot = tileInventory.splice(0, tileInventory.length);
+    console.log(loot);
+    if(loot.length > 0 && loot[0].name === "coin" ) {
+      let coinPlaceX = Math.floor((Math.random() * 10) + 1);
+      let coinPlaceY = Math.floor((Math.random() * 10) + 1);
+      if (coinPlaceX !== playerPosition.x && coinPlaceY !== playerPosition.y) {
+      console.log(coinPlaceX);
+      console.log(coinPlaceY);
+      console.log(playerPosition.x);
+      console.log(playerPosition.y);
+      putItem(coinPlaceX,coinPlaceY,_.cloneDeep(coin));
+      console.log(tileInventory);
+      console.log(level[coinPlaceX][coinPlaceY].inventory);
+      }
+    }
     player.inventory = player.inventory.concat(loot);
     level[tx][ty] = _.cloneDeep(bush);
   }
-};
-
-const putItem = (cx, cy, item) => {
-
-  level[cx][cy].inventory.push(item);
 };
 
 const createColumn = () => {
@@ -53,13 +68,10 @@ const mapInit = () => {
 
   level = new Array(12).fill();
   level = level.map(createColumn);
-  level[2][2] = fillar;
-  level[2][3] = fillar;
-  level[3][2] = fillar;
-  level[3][3] = fillar;
   level[enemyPosition.x][enemyPosition.y] = enemy;
-  putItem(5,5,_.cloneDeep(coin));
-  putItem(5,8,_.cloneDeep(coin));
+  putItem(Math.floor((Math.random() * 10) + 1),Math.floor((Math.random() * 10) + 1),_.cloneDeep(coin));
+  putItem(Math.floor((Math.random() * 10) + 1),Math.floor((Math.random() * 10) + 1),_.cloneDeep(coin));
+  putItem(Math.floor((Math.random() * 10) + 1),Math.floor((Math.random() * 10) + 1),_.cloneDeep(coin));
   for (let i = 0; i < 12; ++i) {
     level[i][0] = fillar;
     level[i][11] = fillar;
@@ -133,6 +145,8 @@ const render = (plane) => {
     console.log('Blink cd: ' + blinkCD / 1000);
     console.log('Dragon Breath cd: ' + dragonBreathCD / 1000);
     console.log('Hp Andrzgeja: ' + enemy.hp);
+    console.log(player.inventory.length);
+    console.log(numberOfCoins);
     console.log('Ekwipunek: ' + player.inventory.map(function (item){
 
       return item.name;
