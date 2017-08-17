@@ -13,7 +13,7 @@ const coin = { name: 'coin', sprite: 'o' };
 
 const player = { name: 'Przemgej', sprite: 'P', walkable: false, hp: 10 ,inventory: [] };
 const playerPosition = { x: 6, y: 8 };
-let numberOfCoins = 0;
+const numberOfCoins = 0;
 let isBlinking = false;
 let blinkCD = 0;
 let isDragonBreathing = false;
@@ -23,6 +23,7 @@ let killCommandCD = 0;
 let isRenewing = false;
 let renewCD = 0;
 let action = true;
+let currentPlayer = 2;
 
 
 
@@ -40,7 +41,7 @@ const pickItem = (target, targetPosition) => {
 
   const tileInventory = level[targetPosition.x][targetPosition.y].inventory;
   const loot = tileInventory.splice(0, tileInventory.length);
-  if(loot.length > 0 && loot[0].name === "coin" ) {
+  if (loot.length > 0 && loot[0].name === 'coin' ) {
     // TODO: check for columns
     let coinPlaceX = targetPosition.x;
     while (coinPlaceX === playerPosition.x || coinPlaceX === enemyPosition.x) {
@@ -91,13 +92,13 @@ const move = (keyPressed, bind, xDirection, yDirection, target, targetPosition) 
 
   if (keyPressed === bind) {
     let distance;
-    if(isKillCommanding === true) {
+    if (isKillCommanding === true) {
       if ( level[enemyPosition.x + xDirection][enemyPosition.y + yDirection] === player ) {
         level[enemyPosition.x + xDirection][enemyPosition.y + yDirection].hp -= 3;
       }
       isKillCommanding = false;
       killCommandCD = 800;
-      const killCommandUpdate = setInterval(function(){
+      const killCommandUpdate = setInterval(function () {
 
         killCommandCD -= 100;
         if (killCommandCD <= 0) {
@@ -208,42 +209,45 @@ const main = (key) => {
     process.exit();
   }
 
-  move(key, 'w', 0, -1, player, playerPosition);
-  move(key, 's', 0, 1, player, playerPosition);
-  move(key, 'a', -1, 0, player, playerPosition);
-  move(key, 'd', 1, 0, player, playerPosition);
-
-  move(key, '8', 0, -1, enemy, enemyPosition);
-  move(key, '5', 0, 1, enemy, enemyPosition);
-  move(key, '4', -1, 0, enemy, enemyPosition);
-  move(key, '6', 1, 0, enemy, enemyPosition);
-
-  if (key === 'r' && blinkCD === 0) {
-    isBlinking = true;
+  if (currentPlayer === 1) {
+    move(key, 'w', 0, -1, player, playerPosition);
+    move(key, 's', 0, 1, player, playerPosition);
+    move(key, 'a', -1, 0, player, playerPosition);
+    move(key, 'd', 1, 0, player, playerPosition);
+    if (key === 'r' && blinkCD === 0) {
+      isBlinking = true;
+    }
+    if (key === 'q' && dragonBreathCD === 0 ) {
+      isDragonBreathing = true;
+    }
   }
-  if (key === 'q' && dragonBreathCD === 0 ) {
-    isDragonBreathing = true;
-  }
-  if (key === 'p' && killCommandCD === 0) {
-    isKillCommanding = true;
-  }
-  if (key === 'o' && renewCD === 0) {
-    isRenewing = true;
-    if (isRenewing === true) {
-      if( enemy.hp < 5) {
-        enemy.hp += 2; 
-      }
-      isRenewing = false;
-      renewCD = 10000;
-      const renewUpdate = setInterval(function(){
 
-        renewCD -= 100;
-        if (renewCD <= 0) {
-          renewCD = 0;
-          clearInterval(renewUpdate);
+  if (currentPlayer === 2) {
+    move(key, 'i', 0, -1, enemy, enemyPosition);
+    move(key, 'k', 0, 1, enemy, enemyPosition);
+    move(key, 'j', -1, 0, enemy, enemyPosition);
+    move(key, 'l', 1, 0, enemy, enemyPosition);
+    if (key === 'p' && killCommandCD === 0) {
+      isKillCommanding = true;
+    }
+    if (key === 'o' && renewCD === 0) {
+      isRenewing = true;
+      if (isRenewing === true) {
+        if ( enemy.hp < 5) {
+          enemy.hp += 2;
         }
-        action = true;
-      }, 100);
+        isRenewing = false;
+        renewCD = 10000;
+        const renewUpdate = setInterval(function () {
+
+          renewCD -= 100;
+          if (renewCD <= 0) {
+            renewCD = 0;
+            clearInterval(renewUpdate);
+          }
+          action = true;
+        }, 100);
+      }
     }
   }
   if ( enemy.hp < 0 ) {
@@ -259,6 +263,6 @@ const main = (key) => {
     turnDB--;
   }
   action = true;
-}
+};
 
 stdin.on('data', main);
