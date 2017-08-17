@@ -18,6 +18,10 @@ let isBlinking = false;
 let blinkCD = 0;
 let isDragonBreathing = false;
 let dragonBreathCD = 0;
+let isKillCommanding = false;
+let killCommandCD = 0;
+let isRenewing = false;
+let renewCD = 0;
 let action = true;
 
 
@@ -35,9 +39,7 @@ const putItem = (cx, cy, item) => {
 const pickItem = (target, targetPosition) => {
 
   const tileInventory = level[targetPosition.x][targetPosition.y].inventory;
-  console.log({tileInventory})
   const loot = tileInventory.splice(0, tileInventory.length);
-  console.log({loot})
   if(loot.length > 0 && loot[0].name === "coin" ) {
     // TODO: check for columns
     let coinPlaceX = targetPosition.x;
@@ -89,6 +91,22 @@ const move = (keyPressed, bind, xDirection, yDirection, target, targetPosition) 
 
   if (keyPressed === bind) {
     let distance;
+    if(isKillCommanding === true) {
+      if ( level[enemyPosition.x + xDirection][enemyPosition.y + yDirection] === player ) {
+        level[enemyPosition.x + xDirection][enemyPosition.y + yDirection].hp -= 3;
+      }
+      isKillCommanding = false;
+      killCommandCD = 800;
+      const killCommandUpdate = setInterval(function(){
+
+        killCommandCD -= 100;
+        if (killCommandCD <= 0) {
+          killCommandCD = 0;
+          clearInterval(killCommandUpdate);
+        }
+        action = true;
+      }, 100);
+    }
     if (isBlinking === true) {
       distance = 3;
       isBlinking = false;
@@ -142,7 +160,10 @@ const render = (plane) => {
     console.log('Y: ' + playerPosition.y);
     console.log('Blink cd: ' + blinkCD / 1000);
     console.log('Dragon Breath cd: ' + dragonBreathCD / 1000);
+    console.log('Kill Command cd: ' + killCommandCD / 1000);
+    console.log('Renew CD: ' + renewCD / 1000);
     console.log('Hp Andrzgeja: ' + enemy.hp);
+    console.log('Hp Przemkgeja: ' + player.hp);
     console.log('Ekwipunek Andrzgeja: ' + enemy.inventory.map(function (item) {
 
       return item.name;
@@ -168,6 +189,15 @@ const render = (plane) => {
   }
 };
 
+const fps = 1000 / 60;
+setInterval(function () {
+
+  if (!level) {
+    main();
+  }
+  render(level);
+}, fps);
+
 const main = (key) => {
 
   if (!level) {
@@ -191,13 +221,36 @@ const main = (key) => {
   if (key === 'r' && blinkCD === 0) {
     isBlinking = true;
   }
-
   if (key === 'q' && dragonBreathCD === 0 ) {
     isDragonBreathing = true;
   }
+  if (key === 'p' && killCommandCD === 0) {
+    isKillCommanding = true;
+  }
+  if (key === 'o' && renewCD === 0) {
+    isRenewing = true;
+    if (isRenewing === true) {
+      if( enemy.hp < 5) {
+        enemy.hp += 2; 
+      }
+      isRenewing = false;
+      renewCD = 10000;
+      const renewUpdate = setInterval(function(){
+
+        renewCD -= 100;
+        if (renewCD <= 0) {
+          renewCD = 0;
+          clearInterval(renewUpdate);
+        }
+        action = true;
+      }, 100);
+    }
+  }
   if ( enemy.hp < 0 ) {
-    console.log('DIE')
     level[enemyPosition.x][enemyPosition.y] = _.cloneDeep(bush);
+  }
+  if ( player.hp < 0 ) {
+    level[playerPosition.x][playerPosition.y] = _.cloneDeep(bush);
   }
   if (turnDB === 1) {
     turnDB = 0;
@@ -207,14 +260,5 @@ const main = (key) => {
   }
   action = true;
 }
-
-const fps = 1000 / 60;
-setInterval(function () {
-
-  if (!level) {
-    main();
-  }
-  render(level);
-}, fps);
 
 stdin.on('data', main);
